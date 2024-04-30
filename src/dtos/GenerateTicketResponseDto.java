@@ -8,6 +8,15 @@ public class GenerateTicketResponseDto {
     private String operatorName;
     private int spotNumber;
     private ResponseStatus responseStatus;
+    private String message;
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
 
     public ResponseStatus getResponseStatus() {
         return responseStatus;

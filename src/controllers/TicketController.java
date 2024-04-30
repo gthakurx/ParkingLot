@@ -4,6 +4,7 @@ import dtos.GenerateTicketRequestDto;
 import dtos.GenerateTicketResponseDto;
 import dtos.ResponseStatus;
 import exceptions.InvalidGateException;
+import exceptions.NoAvaiLableParkingSpot;
 import models.Ticket;
 import models.VehicleType;
 import services.TicketService;
@@ -37,8 +38,21 @@ public class TicketController {
         VehicleType vehicleType=requestDto.getVehicleType();
         Long gateId= requestDto.getGateId();;
 
-        Ticket ticket= ticketService.generateTicket(gateId,vehicleType,vehicleNumber);
+        Ticket ticket;
         GenerateTicketResponseDto responseDto=new GenerateTicketResponseDto();
+        try{
+            ticket=ticketService.generateTicket(gateId,vehicleType,vehicleNumber);
+        }catch (InvalidGateException e){
+            responseDto.setResponseStatus(ResponseStatus.SUCCESS);
+            responseDto.setMessage("Not valid Gate");
+            return responseDto;
+        }catch (NoAvaiLableParkingSpot noAvaiLableParkingSpot){
+            responseDto.setResponseStatus(ResponseStatus.SUCCESS);
+            responseDto.setMessage("No available Parking lot");
+            return responseDto;
+        }
+
+
         responseDto.setTicketId(ticket.getId());
         responseDto.setOperatorName(ticket.getOperator().getName());
         responseDto.setSpotNumber(ticket.getParkingSpot().getParkingSpotNo());

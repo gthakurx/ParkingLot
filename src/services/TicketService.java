@@ -1,8 +1,10 @@
 package services;
 
 import exceptions.InvalidGateException;
+import exceptions.NoAvaiLableParkingSpot;
 import models.*;
 import respositories.GateRepository;
+import respositories.ParkingLotRepository;
 import respositories.TicketRepository;
 import respositories.VehicleRepository;
 import strategies.spotAssignmentStrategies.SpotAssignmentStrategy;
@@ -10,23 +12,28 @@ import strategies.spotAssignmentStrategies.SpotAssignmentStrategy;
 import java.util.Date;
 import java.util.Optional;
 
+
+
 public class TicketService {
     private GateRepository gateRepository;
     private VehicleRepository vehicleRepository;
     private SpotAssignmentStrategy spotAssignmentStrategy;
     private TicketRepository ticketRepository;
+    private ParkingLotRepository parkingLotRepository;
     public TicketService(GateRepository gateRepository,
                          VehicleRepository vehicleRepository,
                          SpotAssignmentStrategy spotAssignmentStrategy,
-                         TicketRepository ticketRepository){
+                         TicketRepository ticketRepository,
+                         ParkingLotRepository parkingLotRepository){
         this.gateRepository=gateRepository;
         this.vehicleRepository=vehicleRepository;
         this.spotAssignmentStrategy=spotAssignmentStrategy;
         this.ticketRepository=ticketRepository;
+        this.parkingLotRepository=parkingLotRepository;
     }
 
     //controller will call the service generateTicket function using these parameter in the request
-    public Ticket generateTicket(Long gateID, VehicleType vehicleType,String vehicleNumber) throws InvalidGateException {
+    public Ticket generateTicket(Long gateID, VehicleType vehicleType,String vehicleNumber) throws InvalidGateException, NoAvaiLableParkingSpot {
 
         /*
         * what all things required to Create Ticket Object and return it
@@ -66,7 +73,14 @@ public class TicketService {
         }else{
             vehicle=vehicleOptional.get();
         }
-        ParkingSpot parkingSpot=spotAssignmentStrategy.findSpot();
+        Optional<ParkingLot> parkingLotOptional=parkingLotRepository.getParkingLotOfGate(gate);
+        ParkingLot parkingLot= parkingLotOptional.get();
+        Optional<ParkingSpot> parkingSpotOptional=spotAssignmentStrategy.findSpot(vehicleType,
+                parkingLot,gate);
+        if(parkingSpotOptional.isEmpty()){
+            throw new NoAvaiLableParkingSpot();
+        }
+        ParkingSpot parkingSpot=parkingSpotOptional.get();
         Ticket ticket=new Ticket();
         ticket.setParkingSpot(parkingSpot);
         ticket.setGate(gate);
